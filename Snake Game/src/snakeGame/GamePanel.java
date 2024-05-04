@@ -1,6 +1,7 @@
 package snakeGame;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,10 +19,12 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener{
 	private int[] snakeYLength=new int[750];
 	private int lengthOfSnake=3;
 	private int moves=0;
+	private int score=0;
 	private boolean left=false;
 	private boolean right=true;
 	private boolean up=false;
 	private boolean down=false;
+	private boolean gameOver=false;
 	private int[] xpos= {25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500,525,550,575,600,625,650,675,700,725,750,775,800,825,850};
 	private int[] ypos= {75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500,525,550,575,600,625};
 	
@@ -52,7 +55,13 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener{
 	private void newEnemy() {
 		enemyX=xpos[random.nextInt(34)];
 		enemyY=ypos[random.nextInt(23)];
-		
+		for(int i=lengthOfSnake-1;i>0;i--)
+		{
+			if(snakeXLength[i]==enemyX && snakeYLength[i]==enemyY)
+			{
+				newEnemy();
+			}
+		}
 	}
 	public void paint(Graphics g)
 	{
@@ -97,6 +106,21 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener{
 			snakeimage.paintIcon(this,g,snakeXLength[i],snakeYLength[i]);
 		}
 		enemy.paintIcon(this, g, enemyX, enemyY);
+		if(gameOver)
+		{
+			g.setColor(Color.white);
+			g.setFont(new Font("Arial",Font.BOLD,50));
+			g.drawString("Game Over", 300, 300);
+			
+			g.setFont(new Font("Arial",Font.PLAIN,20));
+			g.drawString("press space to restart", 320, 350);
+			
+		}
+		g.setColor(Color.white);
+		g.setFont(new Font("Arial",Font.PLAIN,14));
+		g.drawString("Score : "+score, 750, 30);
+		g.drawString("Length : "+lengthOfSnake, 750, 50);
+		
 		g.dispose();
 	}
 	@Override
@@ -127,11 +151,37 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener{
 		if(snakeXLength[0]<25)snakeXLength[0]=850;
 		if(snakeYLength[0]>625)snakeYLength[0]=75;
 		if(snakeYLength[0]<75)snakeYLength[0]=625;
+		collidesWithEnemy();
+		collidesWithBody();
 		repaint();
 	}
 	
+	private void collidesWithBody() {
+		for(int i=lengthOfSnake-1;i>0;i--)
+		{
+			if(snakeXLength[i]==snakeXLength[0] && snakeYLength[i]==snakeYLength[0])
+			{
+				timer.stop();
+				gameOver=true;
+			}
+		}
+	}
+	private void collidesWithEnemy() {
+	
+		if(snakeXLength[0]==enemyX && snakeYLength[0]==enemyY)
+		{
+			newEnemy();
+			lengthOfSnake++;
+			score++;
+		}
+		
+	}
 	@Override
 	public void keyPressed(KeyEvent e) {
+		if(e.getKeyCode()==KeyEvent.VK_SPACE)
+		{
+			restart();
+		}
 		if(e.getKeyCode()==KeyEvent.VK_LEFT && (!right))
 		{
 			left=true;
@@ -166,6 +216,19 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener{
 		}
 		
 		
+	}
+	private void restart()
+	{
+		gameOver=false;
+		moves=0;
+		score=0;
+		lengthOfSnake=3;
+		left=false;
+		right=true;
+		up=false;
+		down=false;
+		timer.start();
+		repaint();
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {
